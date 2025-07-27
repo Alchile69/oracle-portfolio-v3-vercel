@@ -1,0 +1,299 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Oracle Portfolio - Dashboard Principal",
+    "tags": ["oracle-portfolio", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "État des Services",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=~\"oracle-portfolio.*\"}",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "green", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Temps de Réponse (P95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_http_request_duration_seconds_p95",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Secondes",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Taux d'Erreur",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(oracle_portfolio_http_errors_total[5m])",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Erreurs/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Requêtes par Seconde",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_http_requests_per_second",
+            "legendFormat": "{{job}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Req/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Utilisation Mémoire",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_memory_usage_percent",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "%",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Utilisation CPU",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_cpu_usage_percent",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "%",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "Connexions Base de Données",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_db_connections_active",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connexions",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "Fraîcheur des Données",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_data_freshness_seconds / 3600",
+            "legendFormat": "{{sector}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Heures",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 9,
+        "title": "Changements de Régime",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_regime_changes_total",
+            "legendFormat": "{{regime}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Changements",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32}
+      },
+      {
+        "id": 10,
+        "title": "Erreurs de Collecte de Données",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(oracle_portfolio_data_collection_errors_total[5m])",
+            "legendFormat": "{{source}} - {{sector}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Erreurs/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
+      },
+      {
+        "id": 11,
+        "title": "Utilisateurs Actifs",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_active_users_total",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 40}
+      },
+      {
+        "id": 12,
+        "title": "Sessions Utilisateurs",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_user_sessions_total",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 40}
+      },
+      {
+        "id": 13,
+        "title": "Taux de Cache",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_cache_hit_ratio * 100",
+            "legendFormat": "{{instance}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 40}
+      },
+      {
+        "id": 14,
+        "title": "Précision Régimes",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "oracle_portfolio_regime_accuracy_percent",
+            "legendFormat": "Précision"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 40}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+} 

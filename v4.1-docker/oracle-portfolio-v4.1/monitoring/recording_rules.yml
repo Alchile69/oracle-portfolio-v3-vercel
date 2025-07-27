@@ -1,0 +1,87 @@
+groups:
+  - name: oracle-portfolio
+    rules:
+      # Métriques d'erreur
+      - record: oracle_portfolio_http_errors_total
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) by (instance, job)
+
+      # Métriques de latence
+      - record: oracle_portfolio_http_request_duration_seconds_p95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance, job))
+
+      - record: oracle_portfolio_http_request_duration_seconds_p99
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance, job))
+
+      # Métriques de taux de requêtes
+      - record: oracle_portfolio_http_requests_per_second
+        expr: sum(rate(http_requests_total[5m])) by (instance, job)
+
+      # Métriques de base de données
+      - record: oracle_portfolio_db_connections_active
+        expr: sum(pg_stat_database_numbackends) by (instance)
+
+      - record: oracle_portfolio_db_queries_per_second
+        expr: sum(rate(pg_stat_database_xact_commit[5m])) by (instance)
+
+      # Métriques de mémoire
+      - record: oracle_portfolio_memory_usage_bytes
+        expr: node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
+
+      - record: oracle_portfolio_memory_usage_percent
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100
+
+      # Métriques de CPU
+      - record: oracle_portfolio_cpu_usage_percent
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      # Métriques de disque
+      - record: oracle_portfolio_disk_usage_percent
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100
+
+      # Métriques d'uptime
+      - record: oracle_portfolio_uptime_seconds
+        expr: time() - node_boot_time_seconds
+
+      # Métriques de régimes économiques
+      - record: oracle_portfolio_regime_changes_total
+        expr: sum(oracle_portfolio_regime_changes_total) by (regime)
+
+      - record: oracle_portfolio_regime_duration_seconds
+        expr: oracle_portfolio_regime_duration_seconds
+
+      # Métriques de collecte de données
+      - record: oracle_portfolio_data_collection_errors_total
+        expr: sum(oracle_portfolio_data_collection_errors_total) by (source, sector)
+
+      - record: oracle_portfolio_data_freshness_seconds
+        expr: time() - oracle_portfolio_last_data_update_timestamp_seconds
+
+      # Métriques d'allocations
+      - record: oracle_portfolio_allocation_changes_total
+        expr: sum(oracle_portfolio_allocation_changes_total) by (sector)
+
+      # Métriques d'utilisateurs
+      - record: oracle_portfolio_active_users_total
+        expr: sum(oracle_portfolio_active_users_total) by (instance)
+
+      - record: oracle_portfolio_user_sessions_total
+        expr: sum(oracle_portfolio_user_sessions_total) by (instance)
+
+      # Métriques de performance
+      - record: oracle_portfolio_response_time_seconds_avg
+        expr: sum(rate(http_request_duration_seconds_sum[5m])) / sum(rate(http_request_duration_seconds_count[5m]))
+
+      # Métriques de cache
+      - record: oracle_portfolio_cache_hit_ratio
+        expr: oracle_portfolio_cache_hits_total / (oracle_portfolio_cache_hits_total + oracle_portfolio_cache_misses_total)
+
+      # Métriques de sécurité
+      - record: oracle_portfolio_rate_limit_violations_total
+        expr: sum(oracle_portfolio_rate_limit_violations_total) by (endpoint, ip)
+
+      # Métriques de business
+      - record: oracle_portfolio_regime_accuracy_percent
+        expr: oracle_portfolio_regime_predictions_correct_total / oracle_portfolio_regime_predictions_total * 100
+
+      - record: oracle_portfolio_allocation_performance_percent
+        expr: oracle_portfolio_allocation_performance_score 

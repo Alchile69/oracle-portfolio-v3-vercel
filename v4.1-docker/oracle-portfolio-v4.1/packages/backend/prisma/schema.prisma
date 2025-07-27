@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Regime {
+  id            String   @id @default(uuid())
+  country       String   @db.VarChar(3)
+  regime        String   @db.VarChar(20)
+  detectedAt    DateTime @default(now())
+  growthScore   Decimal? @db.Decimal(5, 2)
+  inflationScore Decimal? @db.Decimal(5, 2)
+  confidence    Decimal? @db.Decimal(3, 2)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([country, detectedAt])
+  @@index([regime, detectedAt])
+}
+
+model SectorData {
+  id            String   @id @default(uuid())
+  sector        String   @db.VarChar(50)
+  indicatorName String   @db.VarChar(100)
+  value         Decimal? @db.Decimal(15, 6)
+  date          DateTime
+  source        String?  @db.VarChar(50)
+  qualityScore  Decimal? @db.Decimal(3, 2)
+  createdAt     DateTime @default(now())
+
+  @@index([sector, date])
+  @@index([indicatorName, date])
+}
+
+model AllocationSet {
+  id             String   @id @default(uuid())
+  regime         String   @db.VarChar(20)
+  allocations    Json     // Array of SectorAllocation
+  totalAllocation Decimal  @db.Decimal(5, 2)
+  riskScore      Decimal  @db.Decimal(3, 2)
+  expectedReturn Decimal  @db.Decimal(5, 2)
+  validFrom      DateTime @default(now())
+  validTo        DateTime?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([regime, validFrom])
+}
+
+model AllocationPerformance {
+  id        String   @id @default(uuid())
+  regime    String   @db.VarChar(20)
+  date      DateTime
+  return    Decimal  @db.Decimal(8, 4)
+  volatility Decimal @db.Decimal(8, 4)
+  sharpeRatio Decimal @db.Decimal(8, 4)
+  maxDrawdown Decimal @db.Decimal(8, 4)
+  createdAt DateTime @default(now())
+
+  @@index([regime, date])
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid())
+  name       String   @db.VarChar(100)
+  properties Json?
+  timestamp  DateTime @default(now())
+  userId     String?  @db.VarChar(50)
+  sessionId  String?  @db.VarChar(50)
+  ipAddress  String?  @db.VarChar(45)
+  userAgent  String?  @db.Text
+
+  @@index([name, timestamp])
+  @@index([userId, timestamp])
+}
+
+model Feedback {
+  id       String   @id @default(uuid())
+  type     String   @db.VarChar(20)
+  rating   Int
+  comment  String?  @db.Text
+  metadata Json?
+  createdAt DateTime @default(now())
+  userId   String?  @db.VarChar(50)
+  sessionId String? @db.VarChar(50)
+
+  @@index([type, createdAt])
+  @@index([rating, createdAt])
+}
+
+model AuditLog {
+  id       String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  userId   String?  @db.VarChar(50)
+  action   String   @db.VarChar(50)
+  resource String   @db.VarChar(100)
+  details  Json?
+  result   String   @db.VarChar(20)
+  ipAddress String? @db.VarChar(45)
+
+  @@index([timestamp, action])
+  @@index([userId, timestamp])
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique @db.VarChar(100)
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?  @db.VarChar(50)
+} 

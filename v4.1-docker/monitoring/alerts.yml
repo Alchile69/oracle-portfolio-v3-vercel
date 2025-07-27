@@ -1,0 +1,181 @@
+groups:
+  - name: oracle-portfolio-alerts
+    rules:
+      # Alertes de disponibilité
+      - alert: OraclePortfolioDown
+        expr: up{job="oracle-portfolio-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: oracle-portfolio
+        annotations:
+          summary: "Oracle Portfolio backend is down"
+          description: "Oracle Portfolio backend has been down for more than 1 minute."
+
+      - alert: OraclePortfolioFrontendDown
+        expr: up{job="oracle-portfolio-frontend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: oracle-portfolio
+        annotations:
+          summary: "Oracle Portfolio frontend is down"
+          description: "Oracle Portfolio frontend has been down for more than 1 minute."
+
+      # Alertes de performance
+      - alert: HighResponseTime
+        expr: oracle_portfolio_http_request_duration_seconds_p95 > 2
+        for: 5m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 2 seconds for 5 minutes."
+
+      - alert: HighErrorRate
+        expr: rate(oracle_portfolio_http_errors_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: oracle-portfolio
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for 5 minutes."
+
+      # Alertes de ressources système
+      - alert: HighMemoryUsage
+        expr: oracle_portfolio_memory_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 80% for 5 minutes."
+
+      - alert: HighCPUUsage
+        expr: oracle_portfolio_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% for 5 minutes."
+
+      - alert: HighDiskUsage
+        expr: oracle_portfolio_disk_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "High disk usage"
+          description: "Disk usage is above 85% for 5 minutes."
+
+      # Alertes de base de données
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: oracle-portfolio
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database has been down for more than 1 minute."
+
+      - alert: HighDatabaseConnections
+        expr: oracle_portfolio_db_connections_active > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "High database connections"
+          description: "Number of active database connections is above 80 for 5 minutes."
+
+      # Alertes métier
+      - alert: DataCollectionFailed
+        expr: rate(oracle_portfolio_data_collection_errors_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: oracle-portfolio
+        annotations:
+          summary: "Data collection failures detected"
+          description: "Data collection errors are occurring for 5 minutes."
+
+      - alert: StaleData
+        expr: oracle_portfolio_data_freshness_seconds > 86400
+        for: 1h
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "Data is stale"
+          description: "Data has not been updated for more than 24 hours."
+
+      - alert: RegimeDetectionUnstable
+        expr: oracle_portfolio_regime_changes_total > 5
+        for: 1h
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "Regime detection is unstable"
+          description: "More than 5 regime changes detected in the last hour."
+
+      # Alertes de sécurité
+      - alert: HighRateLimitViolations
+        expr: rate(oracle_portfolio_rate_limit_violations_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "High rate limit violations"
+          description: "Rate limit violations are above 10 per minute for 5 minutes."
+
+      # Alertes de cache
+      - alert: LowCacheHitRatio
+        expr: oracle_portfolio_cache_hit_ratio < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "Low cache hit ratio"
+          description: "Cache hit ratio is below 80% for 10 minutes."
+
+      # Alertes d'uptime
+      - alert: ServiceUptimeLow
+        expr: oracle_portfolio_uptime_seconds < 3600
+        for: 1m
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "Service uptime is low"
+          description: "Service has been running for less than 1 hour."
+
+      # Alertes de métriques business
+      - alert: LowRegimeAccuracy
+        expr: oracle_portfolio_regime_accuracy_percent < 70
+        for: 1h
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "Low regime prediction accuracy"
+          description: "Regime prediction accuracy is below 70% for 1 hour."
+
+      - alert: PoorAllocationPerformance
+        expr: oracle_portfolio_allocation_performance_percent < 50
+        for: 1h
+        labels:
+          severity: warning
+          team: oracle-portfolio
+        annotations:
+          summary: "Poor allocation performance"
+          description: "Allocation performance is below 50% for 1 hour." 

@@ -1,0 +1,54 @@
+{
+  "name": "oracle-portfolio-v4.1",
+  "version": "4.1.0",
+  "description": "Application web modulaire et évolutive d'allocation sectorielle basée sur les régimes économiques",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/frontend",
+    "packages/backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd packages/backend && npm run dev",
+    "dev:frontend": "cd packages/frontend && npm run dev",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "build:shared": "cd packages/shared && npm run build",
+    "build:backend": "cd packages/backend && npm run build",
+    "build:frontend": "cd packages/frontend && npm run build",
+    "test": "npm run test:shared && npm run test:backend && npm run test:frontend",
+    "test:shared": "cd packages/shared && npm test",
+    "test:backend": "cd packages/backend && npm test",
+    "test:frontend": "cd packages/frontend && npm test",
+    "lint": "npm run lint:shared && npm run lint:backend && npm run lint:frontend",
+    "lint:shared": "cd packages/shared && npm run lint",
+    "lint:backend": "cd packages/backend && npm run lint",
+    "lint:frontend": "cd packages/frontend && npm run lint",
+    "setup": "chmod +x scripts/setup.sh && ./scripts/setup.sh",
+    "deploy": "chmod +x scripts/deploy.sh && ./scripts/deploy.sh",
+    "backup": "chmod +x scripts/backup.sh && ./scripts/backup.sh",
+    "update": "chmod +x scripts/update.sh && ./scripts/update.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oracle-portfolio/v4.1.git"
+  },
+  "keywords": [
+    "portfolio",
+    "allocation",
+    "economic-regimes",
+    "investment",
+    "sectors"
+  ],
+  "author": "Oracle Portfolio Team",
+  "license": "MIT"
+} 
