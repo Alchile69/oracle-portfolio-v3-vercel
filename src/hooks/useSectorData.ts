@@ -1,11 +1,8 @@
 /**
- * Hook useSectorData - Gestion des données sectorielles Oracle Portfolio V3.0
- * @author Manus AI
- * @version 3.0.0
- * @date 2025-08-07
+ * Hook useSectorData - Données sectorielles Oracle Portfolio V3.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   SectorData, 
   SectorType, 
@@ -14,15 +11,6 @@ import {
   SectorGrade
 } from '../types/sector.types';
 
-// Interface pour la configuration du hook
-interface UseSectorDataConfig {
-  refreshInterval?: number;
-  autoRefresh?: boolean;
-  enableCache?: boolean;
-  fallbackData?: boolean;
-}
-
-// Interface de retour du hook
 interface UseSectorDataReturn {
   sectors: SectorData[];
   loading: boolean;
@@ -31,8 +19,8 @@ interface UseSectorDataReturn {
   lastFetch: Date | null;
 }
 
-// Données de fallback pour les tests et le développement
-const FALLBACK_SECTOR_DATA: SectorData[] = [
+// Données sectorielles complètes
+const SECTOR_DATA: SectorData[] = [
   {
     metadata: SECTOR_DEFINITIONS[SectorType.TECHNOLOGY],
     metrics: {
@@ -202,48 +190,6 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
     historicalData: []
   },
   {
-    metadata: SECTOR_DEFINITIONS[SectorType.SERVICES],
-    metrics: {
-      allocation: 4.1,
-      performance: 2.9,
-      confidence: 73,
-      trend: TrendDirection.STABLE,
-      riskScore: 50,
-      volatility: 11.8,
-      sharpeRatio: 0.92,
-      beta: 0.85,
-      lastUpdated: new Date()
-    },
-    grade: SectorGrade.B,
-    recommendations: [
-      'Digitalisation des services',
-      'Logistique et e-commerce',
-      'Services aux entreprises'
-    ],
-    historicalData: []
-  },
-  {
-    metadata: SECTOR_DEFINITIONS[SectorType.REAL_ESTATE],
-    metrics: {
-      allocation: 3.8,
-      performance: 0.8,
-      confidence: 65,
-      trend: TrendDirection.DOWN,
-      riskScore: 75,
-      volatility: 19.4,
-      sharpeRatio: 0.35,
-      beta: 1.25,
-      lastUpdated: new Date()
-    },
-    grade: SectorGrade.D,
-    recommendations: [
-      'Taux d\'intérêt défavorables',
-      'Télétravail impact commercial',
-      'REITs résidentiels plus stables'
-    ],
-    historicalData: []
-  },
-  {
     metadata: SECTOR_DEFINITIONS[SectorType.UTILITIES],
     metrics: {
       allocation: 1.4,
@@ -266,66 +212,31 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
   }
 ];
 
-/**
- * Hook personnalisé pour la gestion des données sectorielles
- */
-export const useSectorData = (config: UseSectorDataConfig = {}): UseSectorDataReturn => {
-  const {
-    refreshInterval = 300000, // 5 minutes
-    autoRefresh = true,
-    fallbackData = true
-  } = config;
-
+export const useSectorData = (): UseSectorDataReturn => {
   const [sectors, setSectors] = useState<SectorData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
 
-  // Fonction pour charger les données (utilise uniquement les données de fallback)
-  const loadSectorData = useCallback(() => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Simulation d'un délai de chargement
-      setTimeout(() => {
-        setSectors(FALLBACK_SECTOR_DATA);
-        setLastFetch(new Date());
-        setLoading(false);
-      }, 500);
-      
-    } catch (err) {
-      console.error('Erreur lors du chargement des données sectorielles:', err);
-      setError('Erreur lors du chargement des données');
+  const loadData = () => {
+    setLoading(true);
+    setError(null);
+    
+    // Simulation d'un chargement
+    setTimeout(() => {
+      setSectors(SECTOR_DATA);
+      setLastFetch(new Date());
       setLoading(false);
-      
-      // Utiliser les données de fallback en cas d'erreur
-      if (fallbackData) {
-        setSectors(FALLBACK_SECTOR_DATA);
-      }
-    }
-  }, [fallbackData]);
+    }, 800);
+  };
 
-  // Fonction de refetch
-  const refetch = useCallback(() => {
-    loadSectorData();
-  }, [loadSectorData]);
+  const refetch = () => {
+    loadData();
+  };
 
-  // Chargement initial
   useEffect(() => {
-    loadSectorData();
-  }, [loadSectorData]);
-
-  // Auto-refresh si activé
-  useEffect(() => {
-    if (!autoRefresh || refreshInterval <= 0) return;
-
-    const interval = setInterval(() => {
-      loadSectorData();
-    }, refreshInterval);
-
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, loadSectorData]);
+    loadData();
+  }, []);
 
   return {
     sectors,
