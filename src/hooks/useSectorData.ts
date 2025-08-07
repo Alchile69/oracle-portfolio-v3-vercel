@@ -5,17 +5,13 @@
  * @date 2025-08-07
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   SectorData, 
   SectorType, 
-  SectorMetrics,
   SECTOR_DEFINITIONS,
-  SectorUtils,
   TrendDirection,
-  SectorGrade,
-  UseSectorDataReturn,
-  DEFAULT_SECTOR_CONFIG
+  SectorGrade
 } from '../types/sector.types';
 
 // Interface pour la configuration du hook
@@ -24,6 +20,15 @@ interface UseSectorDataConfig {
   autoRefresh?: boolean;
   enableCache?: boolean;
   fallbackData?: boolean;
+}
+
+// Interface de retour du hook
+interface UseSectorDataReturn {
+  sectors: SectorData[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  lastFetch: Date | null;
 }
 
 // Données de fallback pour les tests et le développement
@@ -53,20 +58,20 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
     metadata: SECTOR_DEFINITIONS[SectorType.FINANCE],
     metrics: {
       allocation: 18.7,
-      performance: 8.1,
+      performance: 8.9,
       confidence: 78,
-      trend: TrendDirection.STABLE,
+      trend: TrendDirection.UP,
       riskScore: 65,
-      volatility: 15.8,
-      sharpeRatio: 1.12,
-      beta: 0.95,
+      volatility: 15.4,
+      sharpeRatio: 1.15,
+      beta: 1.05,
       lastUpdated: new Date()
     },
     grade: SectorGrade.B,
     recommendations: [
-      'Secteur stable avec dividendes',
-      'Bon équilibre risque/rendement',
-      'Surveiller les taux d\'intérêt'
+      'Taux d\'intérêt favorables',
+      'Digitalisation bancaire',
+      'Fintech en expansion'
     ],
     historicalData: []
   },
@@ -76,14 +81,14 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
       allocation: 15.2,
       performance: 6.8,
       confidence: 82,
-      trend: TrendDirection.UP,
+      trend: TrendDirection.STABLE,
       riskScore: 45,
       volatility: 12.1,
       sharpeRatio: 1.28,
       beta: 0.75,
       lastUpdated: new Date()
     },
-    grade: SectorGrade.B,
+    grade: SectorGrade.A,
     recommendations: [
       'Secteur défensif stable',
       'Vieillissement démographique favorable',
@@ -148,23 +153,23 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
     },
     grade: SectorGrade.B,
     recommendations: [
+      'Consommation résiliente',
       'E-commerce en croissance',
-      'Changements comportementaux',
-      'Marques fortes privilégiées'
+      'Marques premium favorisées'
     ],
     historicalData: []
   },
   {
     metadata: SECTOR_DEFINITIONS[SectorType.COMMUNICATION],
     metrics: {
-      allocation: 5.3,
-      performance: 7.8,
-      confidence: 68,
-      trend: TrendDirection.UP,
-      riskScore: 72,
-      volatility: 19.1,
-      sharpeRatio: 1.15,
-      beta: 1.05,
+      allocation: 7.3,
+      performance: 3.8,
+      confidence: 70,
+      trend: TrendDirection.STABLE,
+      riskScore: 55,
+      volatility: 13.6,
+      sharpeRatio: 0.88,
+      beta: 0.95,
       lastUpdated: new Date()
     },
     grade: SectorGrade.B,
@@ -178,21 +183,63 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
   {
     metadata: SECTOR_DEFINITIONS[SectorType.MATERIALS],
     metrics: {
-      allocation: 2.1,
-      performance: -1.2,
-      confidence: 58,
+      allocation: 5.4,
+      performance: 1.2,
+      confidence: 68,
       trend: TrendDirection.DOWN,
       riskScore: 80,
-      volatility: 22.5,
+      volatility: 22.1,
       sharpeRatio: 0.45,
       beta: 1.35,
       lastUpdated: new Date()
     },
+    grade: SectorGrade.C,
+    recommendations: [
+      'Cyclique dépendant de l\'économie',
+      'Matériaux verts en développement',
+      'Volatilité des prix des commodités'
+    ],
+    historicalData: []
+  },
+  {
+    metadata: SECTOR_DEFINITIONS[SectorType.SERVICES],
+    metrics: {
+      allocation: 4.1,
+      performance: 2.9,
+      confidence: 73,
+      trend: TrendDirection.STABLE,
+      riskScore: 50,
+      volatility: 11.8,
+      sharpeRatio: 0.92,
+      beta: 0.85,
+      lastUpdated: new Date()
+    },
+    grade: SectorGrade.B,
+    recommendations: [
+      'Digitalisation des services',
+      'Logistique et e-commerce',
+      'Services aux entreprises'
+    ],
+    historicalData: []
+  },
+  {
+    metadata: SECTOR_DEFINITIONS[SectorType.REAL_ESTATE],
+    metrics: {
+      allocation: 3.8,
+      performance: 0.8,
+      confidence: 65,
+      trend: TrendDirection.DOWN,
+      riskScore: 75,
+      volatility: 19.4,
+      sharpeRatio: 0.35,
+      beta: 1.25,
+      lastUpdated: new Date()
+    },
     grade: SectorGrade.D,
     recommendations: [
-      'Cyclique et sensible aux commodités',
-      'Transition vers matériaux durables',
-      'Volatilité élevée'
+      'Taux d\'intérêt défavorables',
+      'Télétravail impact commercial',
+      'REITs résidentiels plus stables'
     ],
     historicalData: []
   },
@@ -224,9 +271,8 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
  */
 export const useSectorData = (config: UseSectorDataConfig = {}): UseSectorDataReturn => {
   const {
-    refreshInterval = DEFAULT_SECTOR_CONFIG.refreshInterval,
+    refreshInterval = 300000, // 5 minutes
     autoRefresh = true,
-    enableCache = true,
     fallbackData = true
   } = config;
 
@@ -235,228 +281,58 @@ export const useSectorData = (config: UseSectorDataConfig = {}): UseSectorDataRe
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
 
-  // Cache des données
-  const [cache, setCache] = useState<Map<string, { data: SectorData[]; timestamp: Date }>>(new Map());
-
-  // Fonction pour récupérer les données depuis l'API
-  const fetchSectorData = useCallback(async (): Promise<SectorData[]> => {
+  // Fonction pour charger les données (utilise uniquement les données de fallback)
+  const loadSectorData = useCallback(() => {
     try {
-      // Vérifier le cache si activé
-      if (enableCache) {
-        const cacheKey = 'sector-data';
-        const cachedData = cache.get(cacheKey);
-        if (cachedData && Date.now() - cachedData.timestamp.getTime() < refreshInterval) {
-          return cachedData.data;
-        }
-      }
-
-      // Simulation d'appel API - À remplacer par l'appel réel
-      const response = await fetch('/api/sectors', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      setLoading(true);
+      setError(null);
       
-      // Validation des données
-      const validatedData = data.sectors.filter((sector: SectorData) => 
-        SectorUtils.validateSectorData(sector)
-      );
-
-      // Mise à jour du cache
-      if (enableCache) {
-        setCache(prev => new Map(prev.set('sector-data', {
-          data: validatedData,
-          timestamp: new Date()
-        })));
-      }
-
-      return validatedData;
-    } catch (apiError) {
-      console.warn('Erreur lors de la récupération des données sectorielles:', apiError);
+      // Simulation d'un délai de chargement
+      setTimeout(() => {
+        setSectors(FALLBACK_SECTOR_DATA);
+        setLastFetch(new Date());
+        setLoading(false);
+      }, 500);
       
-      // Utiliser les données de fallback si activées
-      if (fallbackData) {
-        console.info('Utilisation des données de fallback sectorielles');
-        return FALLBACK_SECTOR_DATA;
-      }
-      
-      throw apiError;
-    }
-  }, [cache, enableCache, refreshInterval, fallbackData]);
-
-  // Fonction pour rafraîchir les données
-  const refetch = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const data = await fetchSectorData();
-      setSectors(data);
-      setLastFetch(new Date());
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(errorMessage);
-      console.error('Erreur lors du rafraîchissement des données sectorielles:', err);
-    } finally {
+      console.error('Erreur lors du chargement des données sectorielles:', err);
+      setError('Erreur lors du chargement des données');
       setLoading(false);
-    }
-  }, [fetchSectorData]);
-
-  // Fonction pour mettre à jour un secteur spécifique
-  const updateSector = useCallback(async (
-    sectorId: SectorType, 
-    data: Partial<SectorMetrics>
-  ): Promise<void> => {
-    try {
-      // Simulation d'appel API pour mise à jour - À remplacer par l'appel réel
-      const response = await fetch(`/api/sectors/${sectorId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erreur lors de la mise à jour: ${response.status}`);
+      
+      // Utiliser les données de fallback en cas d'erreur
+      if (fallbackData) {
+        setSectors(FALLBACK_SECTOR_DATA);
       }
-
-      // Mise à jour locale des données
-      setSectors(prevSectors => 
-        prevSectors.map(sector => 
-          sector.metadata.id === sectorId 
-            ? {
-                ...sector,
-                metrics: { ...sector.metrics, ...data, lastUpdated: new Date() },
-                grade: SectorUtils.calculateGrade(data.performance ?? sector.metrics.performance)
-              }
-            : sector
-        )
-      );
-
-      // Invalider le cache
-      if (enableCache) {
-        setCache(prev => {
-          const newCache = new Map(prev);
-          newCache.delete('sector-data');
-          return newCache;
-        });
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erreur de mise à jour';
-      setError(errorMessage);
-      throw err;
     }
-  }, [enableCache]);
+  }, [fallbackData]);
 
-  // Chargement initial des données
+  // Fonction de refetch
+  const refetch = useCallback(() => {
+    loadSectorData();
+  }, [loadSectorData]);
+
+  // Chargement initial
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    loadSectorData();
+  }, [loadSectorData]);
 
   // Auto-refresh si activé
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!autoRefresh || refreshInterval <= 0) return;
 
     const interval = setInterval(() => {
-      if (!loading) {
-        refetch();
-      }
+      loadSectorData();
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, loading, refetch]);
-
-  // Mémorisation des données triées et enrichies
-  const enrichedSectors = useMemo(() => {
-    return sectors.map(sector => ({
-      ...sector,
-      grade: SectorUtils.calculateGrade(sector.metrics.performance),
-      metadata: {
-        ...sector.metadata,
-        ...SECTOR_DEFINITIONS[sector.metadata.id]
-      }
-    }));
-  }, [sectors]);
+  }, [autoRefresh, refreshInterval, loadSectorData]);
 
   return {
-    sectors: enrichedSectors,
+    sectors,
     loading,
     error,
     refetch,
-    updateSector
+    lastFetch
   };
 };
-
-/**
- * Hook pour les statistiques sectorielles agrégées
- */
-export const useSectorStats = (sectors: SectorData[]) => {
-  return useMemo(() => {
-    if (!sectors.length) {
-      return {
-        totalAllocation: 0,
-        averagePerformance: 0,
-        averageRisk: 0,
-        averageConfidence: 0,
-        topPerformer: null,
-        worstPerformer: null,
-        diversificationScore: 0,
-        gradeDistribution: {},
-        riskDistribution: {}
-      };
-    }
-
-    const totalAllocation = sectors.reduce((sum, sector) => sum + sector.metrics.allocation, 0);
-    const averagePerformance = sectors.reduce((sum, sector) => sum + sector.metrics.performance, 0) / sectors.length;
-    const averageRisk = sectors.reduce((sum, sector) => sum + sector.metrics.riskScore, 0) / sectors.length;
-    const averageConfidence = sectors.reduce((sum, sector) => sum + sector.metrics.confidence, 0) / sectors.length;
-    
-    const topPerformer = sectors.reduce((best, current) => 
-      current.metrics.performance > best.metrics.performance ? current : best
-    );
-    
-    const worstPerformer = sectors.reduce((worst, current) => 
-      current.metrics.performance < worst.metrics.performance ? current : worst
-    );
-
-    const diversificationScore = SectorUtils.calculateDiversificationScore(
-      sectors.map(sector => ({
-        sectorId: sector.metadata.id,
-        allocation: sector.metrics.allocation
-      }))
-    );
-
-    const gradeDistribution = sectors.reduce((acc, sector) => {
-      acc[sector.grade] = (acc[sector.grade] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const riskDistribution = sectors.reduce((acc, sector) => {
-      acc[sector.metadata.riskLevel] = (acc[sector.metadata.riskLevel] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    return {
-      totalAllocation,
-      averagePerformance,
-      averageRisk,
-      averageConfidence,
-      topPerformer,
-      worstPerformer,
-      diversificationScore,
-      gradeDistribution,
-      riskDistribution
-    };
-  }, [sectors]);
-};
-
-export default useSectorData;
 

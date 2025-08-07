@@ -15,20 +15,12 @@
     <meta property="og:title" content="Oracle Portfolio V3.0 - Secteurs d'Activité" />
     <meta property="og:description" content="Évolution V2.5 → V3.0 avec 11 secteurs d'activité, graphiques interactifs et auto-amélioration (ROI 1,464%+)" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://oracle-portfolio-v3-secteurs.vercel.app" />
-    <meta property="og:image" content="https://oracle-portfolio-v3-secteurs.vercel.app/og-image.png" />
+    <meta property="og:url" content="https://oracle-portfolio-v3-vercel.vercel.app" />
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Oracle Portfolio V3.0 - Secteurs d'Activité" />
     <meta name="twitter:description" content="Analyse sectorielle avancée avec 11 secteurs, graphiques interactifs et ROI documenté de 1,464%+" />
-    <meta name="twitter:image" content="https://oracle-portfolio-v3-secteurs.vercel.app/og-image.png" />
-    
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,12 +29,6 @@
     
     <!-- Theme Color -->
     <meta name="theme-color" content="#3b82f6" />
-    
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="/src/index.css" as="style">
-    
-    <!-- Analytics (placeholder) -->
-    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script> -->
     
     <style>
       /* Critical CSS pour éviter le FOUC */
@@ -125,21 +111,6 @@
     
     <!-- Vite Script -->
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Service Worker Registration (optional) -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js')
-            .then(function(registration) {
-              console.log('SW registered: ', registration);
-            })
-            .catch(function(registrationError) {
-              console.log('SW registration failed: ', registrationError);
-            });
-        });
-      }
-    </script>
   </body>
 </html>
 
