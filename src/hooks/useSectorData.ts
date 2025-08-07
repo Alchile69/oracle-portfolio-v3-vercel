@@ -19,8 +19,8 @@ interface UseSectorDataReturn {
   lastFetch: Date | null;
 }
 
-// Données sectorielles complètes
-const SECTOR_DATA: SectorData[] = [
+// Données de fallback en cas d'erreur API
+const FALLBACK_SECTOR_DATA: SectorData[] = [
   {
     metadata: SECTOR_DEFINITIONS[SectorType.TECHNOLOGY],
     metrics: {
@@ -218,16 +218,61 @@ export const useSectorData = (): UseSectorDataReturn => {
   const [error, setError] = useState<string | null>(null);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
 
-  const loadData = () => {
+  const loadData = async () => {
     setLoading(true);
     setError(null);
     
-    // Simulation d'un chargement
-    setTimeout(() => {
-      setSectors(SECTOR_DATA);
+    try {
+      // Essayer d'abord l'API
+      const response = await fetch('/api/sectors', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Convertir les données API vers le format SectorData
+        const convertedSectors: SectorData[] = data.sectors.map((sector: any) => ({
+          metadata: {
+            id: sector.metadata.id,
+            name: sector.metadata.name,
+            description: sector.metadata.description,
+            category: sector.metadata.category,
+            riskLevel: sector.metadata.riskLevel
+          },
+          metrics: {
+            allocation: sector.metrics.allocation,
+            performance: sector.metrics.performance,
+            confidence: sector.metrics.confidence,
+            trend: sector.metrics.trend as TrendDirection,
+            riskScore: sector.metrics.riskScore,
+            volatility: sector.metrics.volatility,
+            sharpeRatio: sector.metrics.sharpeRatio,
+            beta: sector.metrics.beta,
+            lastUpdated: new Date(sector.metrics.lastUpdated)
+          },
+          grade: sector.grade as SectorGrade,
+          recommendations: sector.recommendations,
+          historicalData: sector.historicalData || []
+        }));
+
+        setSectors(convertedSectors);
+        setLastFetch(new Date());
+        console.log('✅ Données sectorielles chargées depuis l\'API');
+      } else {
+        throw new Error(`Erreur API: ${response.status}`);
+      }
+    } catch (err) {
+      console.warn('⚠️ Erreur API, utilisation des données de fallback:', err);
+      // Utiliser les données de fallback
+      setSectors(FALLBACK_SECTOR_DATA);
       setLastFetch(new Date());
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const refetch = () => {
