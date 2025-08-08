@@ -1,5 +1,6 @@
 /**
  * Hook useSectorData - Données sectorielles Oracle Portfolio V3.0
+ * Avec gestion d'erreurs robuste et fallback automatique
  */
 
 import { useState, useEffect } from 'react';
@@ -19,7 +20,7 @@ interface UseSectorDataReturn {
   lastFetch: Date | null;
 }
 
-// Données de fallback en cas d'erreur API
+// Données de fallback complètes
 const FALLBACK_SECTOR_DATA: SectorData[] = [
   {
     metadata: SECTOR_DEFINITIONS[SectorType.TECHNOLOGY],
@@ -212,6 +213,16 @@ const FALLBACK_SECTOR_DATA: SectorData[] = [
   }
 ];
 
+// Fonction pour valider si une réponse est du JSON valide
+const isValidJSON = (text: string): boolean => {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const useSectorData = (): UseSectorDataReturn => {
   const [sectors, setSectors] = useState<SectorData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -223,17 +234,31 @@ export const useSectorData = (): UseSectorDataReturn => {
     setError(null);
     
     try {
-      // Essayer d'abord l'API
+      console.log('🔄 Tentative de récupération des données sectorielles...');
+      
       const response = await fetch('/api/sectors', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const responseText = await response.text();
         
+        // Vérifier si la réponse est du JSON valide
+        if (!isValidJSON(responseText)) {
+          throw new Error(`Réponse invalide: reçu HTML au lieu de JSON. Contenu: ${responseText.substring(0, 100)}...`);
+        }
+        
+        const data = JSON.parse(responseText);
+        
+        // Vérifier la structure des données
+        if (!data.sectors || !Array.isArray(data.sectors)) {
+          throw new Error('Structure de données invalide: propriété "sectors" manquante ou invalide');
+        }
+
         // Convertir les données API vers le format SectorData
         const convertedSectors: SectorData[] = data.sectors.map((sector: any) => ({
           metadata: {
@@ -261,15 +286,21 @@ export const useSectorData = (): UseSectorDataReturn => {
 
         setSectors(convertedSectors);
         setLastFetch(new Date());
-        console.log('✅ Données sectorielles chargées depuis l\'API');
+        console.log('✅ Données sectorielles chargées depuis l\'API avec succès');
+        
       } else {
-        throw new Error(`Erreur API: ${response.status}`);
+        throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`);
       }
+      
     } catch (err) {
-      console.warn('⚠️ Erreur API, utilisation des données de fallback:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+      console.warn('⚠️ Erreur lors de la récupération des données sectorielles:', errorMessage);
+      console.log('🔄 Utilisation des données de fallback sectorielles');
+      
       // Utiliser les données de fallback
       setSectors(FALLBACK_SECTOR_DATA);
       setLastFetch(new Date());
+      setError(`API indisponible: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
