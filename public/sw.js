@@ -1,5 +1,5 @@
-// Service Worker pour Oracle Portfolio
-const CACHE_NAME = 'oracle-portfolio-v1';
+// Service Worker pour Oracle Portfolio V3.0
+const CACHE_NAME = 'oracle-portfolio-v3.0';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -14,7 +14,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Cache ouvert');
+        console.log('Cache ouvert pour Oracle Portfolio V3.0');
         return cache.addAll(urlsToCache);
       })
   );
